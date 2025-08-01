@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { storePlayer, storeGroups, storeGame, loadInitialData, createGame, unassignPlayerFromGroup, deletePlayer, deleteGroup } from "@/api/supabase";
+import { storePlayer, storeGroups, storeGame, loadInitialData, createGame, unassignPlayerFromGroup, deletePlayer, deleteGroup, updatePlayerGroups } from "@/api/supabase";
 import PlayerCard from "./PlayerCard";
 function MainComponent() {
   // ...
@@ -100,7 +100,7 @@ function MainComponent() {
       };
       await setPlayers(newPlayer); // Persist to backend
       setNewPlayerName("");
-      await setInitialData(); // Reload all players, groups, etc.
+      _setPlayers([...players, newPlayer]);
     }
   };
 
@@ -597,14 +597,13 @@ function MainComponent() {
       >
         {groupPlayers.map((player) => (
   <PlayerCard
-    key={player.id}
+    key={`${group.id}-${player.id}`}
     player={player}
     groups={groups}
     onDelete={removePlayer}
     onUnassign={(playerId) => handleUnassignPlayerFromGroup(playerId, group.id)}
     onUpdateGroups={(playerId, newGroups) => {
       _setPlayers((prev) => prev.map(p => p.id === playerId ? { ...p, groups: newGroups } : p));
-      // Optionally, persist to backend here
     }}
   />
 ))}
@@ -628,7 +627,7 @@ function MainComponent() {
   .filter((p) => !p.groups || p.groups.length === 0)
   .map((player) => (
     <PlayerCard
-      key={player.id}
+      key={`nogroup-${player.id}`}
       player={player}
       groups={groups}
       onDelete={removePlayer}

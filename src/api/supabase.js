@@ -54,6 +54,17 @@ export const storePlayer = async (player) => {
     return newPlayer;
 }
 
+export const updatePlayerGroups = async (playerId, groups) => {
+    // Delete existing associations
+    await supabase.from('player_group').delete().eq('player', playerId);
+    // Create new associations
+    const playerGroups = groups.map(group => {
+        return {player: playerId, group: group}
+    })
+    await supabase.from('player_group').insert(playerGroups);
+}
+
+
 export const storeGroups = async (groupName) => {
     // name; 
     const {data, error} =  await supabase.from('groups').insert({name:groupName}).select();

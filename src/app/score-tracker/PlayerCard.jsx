@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { updatePlayerGroups } from "@/api/supabase";
 
 export default function PlayerCard({ player, groups, onDelete, onUnassign, onUpdateGroups }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,7 +22,8 @@ export default function PlayerCard({ player, groups, onDelete, onUnassign, onUpd
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updatePlayerGroups(player.id, selectedGroups);
     onUpdateGroups(player.id, selectedGroups);
     setModalOpen(false);
   };

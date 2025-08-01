@@ -84,6 +84,10 @@ export const createGame = async(opponentTeam) => {
         start_time: new Date(),
         end_time: null
     }).select();
+    if (error) {
+        console.error(error);
+        return;
+    }
     return data[0];
 }
 

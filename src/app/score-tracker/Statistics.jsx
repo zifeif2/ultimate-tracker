@@ -1,13 +1,40 @@
 import React from "react";
 
-export default function Statistics({
-  players,
-  groups,
-  games,
-  getTopScorers,
-  getTopAssisters,
-  getTopPlayMakers,
-}) {
+export default function Statistics() {
+  const [players, _setPlayers] = React.useState([]);
+  const [games, _setGames] = React.useState([]);
+
+  React.useEffect( () => {
+  
+    const setInitialData = async () => {
+    const {playersData, groupsData, gamesData} = await loadInitialData();
+    _setPlayers(playersData || []);
+    _setGroups(groupsData || []);
+    _setGames(gamesData || []);
+    }
+    setInitialData();
+  }, []);
+
+  // Get player stats
+  const getTopScorers = () => {
+    return [...players]
+      .sort((a, b) => b.stats.total.goals - a.stats.total.goals)
+      .slice(0, 5);
+  };
+
+  const getTopAssisters = () => {
+    return [...players]
+      .sort((a, b) => b.stats.total.assists - a.stats.total.assists)
+      .slice(0, 5);
+  };
+
+  // New function to get top play makers
+  const getTopPlayMakers = () => {
+    return [...players]
+      .sort((a, b) => b.stats.total.plays - a.stats.total.plays)
+      .slice(0, 5);
+  };
+
   return (
     <div>
       <h2 style={{ color: "#333", marginBottom: "20px" }}>Statistics</h2>

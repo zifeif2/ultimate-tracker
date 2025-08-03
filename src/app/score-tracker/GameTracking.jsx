@@ -6,6 +6,9 @@ export default function GameTracking() {
   const [editingPointIndex, setEditingPointIndex] = React.useState(null);
 
   const [opponentTeam, setOpponentTeam] = React.useState("");
+  const [tournamentList, setTournamentList] = React.useState([]);
+  const [selectedTournament, setSelectedTournament] = React.useState("");
+  const [newTournamentName, setNewTournamentName] = React.useState("");
   const [selectedPlayers, setSelectedPlayers] = React.useState([]);
   const [ourScore, setOurScore] = React.useState(0);
   const [currentGame, setCurrentGame] = React.useState(null);
@@ -54,14 +57,35 @@ export default function GameTracking() {
 
 
   const startNewGame = async () => {
-    if (opponentTeam.trim()) {
-      const newGame = await createGame(opponentTeam.trim());
+    let tournamentToUse = selectedTournament;
+    if (selectedTournament === '__new__') {
+      tournamentToUse = newTournamentName.trim();
+      setSelectedTournament(tournamentToUse);
+    }
+    if (opponentTeam.trim() && tournamentToUse) {
+      const newGame = await createGame(opponentTeam.trim(), tournamentToUse);
       setCurrentGame(newGame);
       setOurScore(0);
       setOpponentScore(0);
       setOpponentTeam("");
+      setSelectedTournament(tournamentToUse);
+      setNewTournamentName("");
     }
   };
+
+  // Load tournaments on mount
+  React.useEffect(() => {
+    async function fetchTournaments() {
+      try {
+        const { gamesData } = await loadInitialData();
+        const tournaments = Array.from(new Set((gamesData || []).map(g => g.tournament).filter(Boolean)));
+        setTournamentList(tournaments);
+      } catch (err) {
+        setTournamentList([]);
+      }
+    }
+    fetchTournaments();
+  }, []);
 
     // Select players for point
   const togglePlayerSelection = (playerId) => {
@@ -127,8 +151,9 @@ export default function GameTracking() {
     } else {
       updatedPoints.push(pointData);
     }
+    console.log(updatedPoints);
 
-    storeGame(currentGame.id, ourNewScore, opponentNewScore, updatedPoints, null)
+    storeGame(currentGame.id, ourNewScore, opponentNewScore, updatedPoints, null, selectedTournament || (currentGame && currentGame.tournament) || "")
 
     // Add point to current game
     setCurrentGame((prev) => ({
@@ -162,7 +187,7 @@ export default function GameTracking() {
       opponentScore,
     };
     _setGames([...games, finishedGame]);
-    storeGame(currentGame.id, ourScore, opponentScore, finishedGame.points, new Date())
+    storeGame(currentGame.id, ourScore, opponentScore, finishedGame.points, new Date(), selectedTournament || (currentGame && currentGame.tournament) || "")
     setCurrentGame(null);
   };
 
@@ -263,19 +288,44 @@ export default function GameTracking() {
               flexWrap: "wrap",
             }}
           >
-            <input
-              type="text"
-              value={opponentTeam}
-              onChange={(e) => setOpponentTeam(e.target.value)}
-              placeholder="Opponent team name"
-              style={{
-                padding: "8px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                flex: "1",
-                minWidth: "200px",
-              }}
-            />
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+                Tournament
+              </label>
+              <select
+                value={selectedTournament}
+                onChange={e => setSelectedTournament(e.target.value)}
+                style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+              >
+                <option value="">Select tournament...</option>
+                {tournamentList.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+                <option value="__new__">Create new tournament...</option>
+              </select>
+              {selectedTournament === "__new__" && (
+                <input
+                  type="text"
+                  value={newTournamentName}
+                  onChange={e => setNewTournamentName(e.target.value)}
+                  placeholder="Enter new tournament name"
+                  style={{ width: "100%", marginTop: "8px", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                />
+              )}
+            </div>
+
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+                Opponent Team
+              </label>
+              <input
+                type="text"
+                value={opponentTeam}
+                onChange={(e) => setOpponentTeam(e.target.value)}
+                placeholder="Enter opponent team name"
+                style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+              />
+            </div>
             <button
               onClick={startNewGame}
               style={{
@@ -304,7 +354,7 @@ export default function GameTracking() {
                     onClick={() => {
                       setCurrentGame({
                         ...game,
-                        points: game.points ? (typeof game.points === 'string' ? JSON.parse(game.points) : game.points) : [],
+                        points: game.points ? game.points : JSON.Array(),
                       });
                       setOurScore(game.our_score ?? 0);
                       setOpponentScore(game.opponent_score ?? 0);
@@ -371,7 +421,7 @@ export default function GameTracking() {
                       marginTop: "5px",
                     }}
                   >
-                    {game.start_time.toLocaleString()} | {JSON.parse(game.points).length}{" "}
+                    {game.start_time.toLocaleString()} | {game.points.length}{" "}
                     points played
                   </div>
                 </div>

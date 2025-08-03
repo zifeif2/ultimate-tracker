@@ -1,7 +1,7 @@
 import React from "react";
 import PlayerCard from "./PlayerCard";
 
-import { deleteGroup, deletePlayer, loadInitialData, unassignPlayerFromGroup, storePlayer } from "@/api/supabase";
+import { storeGroups, deleteGroup, deletePlayer, loadInitialData, unassignPlayerFromGroup, storePlayer } from "@/api/supabase";
 
 export default function RosterManagement() {
   
@@ -63,6 +63,11 @@ export default function RosterManagement() {
         alert("Failed to unassign player from group.");
       }
     };
+
+    const setGroups = async (groupName) => {
+      const newGroup = await storeGroups(groupName)
+      _setGroups([...groups, newGroup]);
+    };  
   
     // Add player
     const addPlayer = async () => {

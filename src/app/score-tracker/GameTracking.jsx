@@ -354,7 +354,7 @@ export default function GameTracking() {
                     onClick={() => {
                       setCurrentGame({
                         ...game,
-                        points: game.points ? game.points : JSON.Array(),
+                        points: Array.isArray(game.points) ? game.points : [],
                       });
                       setOurScore(game.our_score ?? 0);
                       setOpponentScore(game.opponent_score ?? 0);
@@ -421,7 +421,7 @@ export default function GameTracking() {
                       marginTop: "5px",
                     }}
                   >
-                    {game.start_time.toLocaleString()} | {game.points.length}{" "}
+                    {game.start_time.toLocaleString()} | {Array.isArray(game.points) ? game.points.length : 0}{" "}
                     points played
                   </div>
                 </div>

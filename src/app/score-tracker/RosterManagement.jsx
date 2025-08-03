@@ -127,30 +127,22 @@ export default function RosterManagement() {
             }}
           />
           <button
-            onClick={addGroup}
+  onClick={addGroup}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#28a745",
+              backgroundColor: "#6a89a7",
               color: "white",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
             }}
-          >
-            Add Group
-          </button>
+>
+  Add Group
+</button>
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {groups.map((group) => (
-            <div key={group.id} style={{
-              padding: "5px 10px",
-              backgroundColor: "#007bff",
-              color: "white",
-              borderRadius: "15px",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-            }}>
+            <div key={group.id} className="px-3 py-1 rounded-full bg-blue-200 text-slate-700 text-sm flex items-center">
               <span>{group.name}</span>
               <button
                 title="Delete group"
@@ -217,15 +209,7 @@ export default function RosterManagement() {
                 <button
                   key={group.id}
                   onClick={() => selectedGroups.includes(group.id) ? setSelectedGroups(selectedGroups.filter((g) => g !== group.id)) : setSelectedGroups([...selectedGroups, group.id])}
-                  style={{
-                    padding: "5px 10px",
-                    backgroundColor: selectedGroups.includes(group.id) ? "#007bff" : "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "15px",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                  }}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 border ${selectedGroups.includes(group.id) ? 'bg-purple-100 border-purple-200 text-slate-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
                 >
                   {group.name}
                 </button>
@@ -233,18 +217,18 @@ export default function RosterManagement() {
             </div>
           </div>
           <button
-            onClick={addPlayer}
+  onClick={addPlayer}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#28a745",
+              backgroundColor: "#6a89a7",
               color: "white",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
             }}
-          >
-            Add Player
-          </button>
+>
+  Add Player
+</button>
         </div>
       </div>
       {/* Players List */}

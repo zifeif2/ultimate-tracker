@@ -327,18 +327,18 @@ export default function GameTracking() {
               />
             </div>
             <button
-              onClick={startNewGame}
+  onClick={startNewGame}
               style={{
-                padding: "8px 16px",
-                backgroundColor: "#007bff",
+                padding: "8px 8px",
+                backgroundColor: "#6a89a7",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
                 cursor: "pointer",
               }}
-            >
-              Start Game
-            </button>
+>
+  Start Game
+</button>
           </div>
           {/* Existing Games (Resume) */}
           {games && games.filter(g => !g.end_time).length > 0 && (
@@ -350,7 +350,7 @@ export default function GameTracking() {
                     <strong>vs {game.opponent}</strong> <span style={{ fontSize: '12px', color: '#888' }}>Started: {game.start_time ? (new Date(game.start_time)).toLocaleString() : ''}</span>
                   </div>
                   <button
-                    style={{ padding: '6px 15px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-blue-200 via-purple-100 to-slate-100 hover:from-blue-300 hover:to-purple-200 transition-all duration-200"
                     onClick={() => {
                       setCurrentGame({
                         ...game,
@@ -369,23 +369,13 @@ export default function GameTracking() {
           {/* Game History */}
           {games.length > 0 && (
             <div
-              style={{
-                padding: "20px",
-                backgroundColor: "#f8f9fa",
-                borderRadius: "8px",
-              }}
+              className="p-6 rounded-xl bg-slate-100"
             >
               <h3 style={{ marginBottom: "15px" }}>Game History</h3>
               {games.map((game) => (
                 <div
                   key={game.id}
-                  style={{
-                    padding: "15px",
-                    backgroundColor: "white",
-                    border: "1px solid #ddd",
-                    borderRadius: "5px",
-                    marginBottom: "10px",
-                  }}
+                  className="p-4 mb-3 rounded-lg bg-slate-50 border border-slate-200"
                 >
                   <div
                     style={{
@@ -886,19 +876,16 @@ export default function GameTracking() {
                           {player?.name}: {play.type}
                         </span>
                         <button
-                          onClick={() => removePlay(play.id)}
-                          style={{
-                            padding: "4px 8px",
-                            backgroundColor: "#dc3545",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "3px",
-                            cursor: "pointer",
-                            fontSize: "12px",
-                          }}
-                        >
-                          Remove
-                        </button>
+  onClick={() => removePlay(play.id)}
+  className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 via-orange-400 to-yellow-400 hover:from-red-500 hover:to-yellow-500 text-white shadow-md transition-all duration-200"
+  aria-label="Remove play"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth="2">
+    <circle cx="10" cy="10" r="9" stroke="currentColor" fill="none" />
+    <line x1="7" y1="7" x2="13" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <line x1="13" y1="7" x2="7" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+</button>
                       </div>
                     );
                   })}
@@ -948,52 +935,27 @@ export default function GameTracking() {
             }}
           >
             <button
-              onClick={() => recordPoint("us")}
-              style={{
-                padding: "15px 30px",
-                backgroundColor: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: "bold",
-              }}
-            >
-              We Scored!
-            </button>
+  onClick={() => recordPoint("us")}
+  className="px-8 py-4 rounded-2xl font-bold text-lg text-white shadow-lg bg-gradient-to-tr from-pink-500 via-orange-400 to-yellow-400 hover:from-red-500 hover:to-yellow-500 transition-all duration-200"
+>
+  We Scored!
+</button>
             <button
-              onClick={() => recordPoint("opponent")}
-              style={{
-                padding: "15px 30px",
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: "bold",
-              }}
-            >
-              They Scored
-            </button>
+  onClick={() => recordPoint("opponent")}
+  className="px-8 py-4 rounded-2xl font-bold text-lg text-white shadow-lg bg-gradient-to-tr from-purple-500 via-indigo-400 to-blue-400 hover:from-pink-500 hover:to-purple-500 transition-all duration-200"
+>
+  They Scored
+</button>
           </div>
 
           {/* End Game */}
           <div style={{ textAlign: "center" }}>
             <button
-              onClick={endGame}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#6c757d",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              End Game
-            </button>
+  onClick={endGame}
+  className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-tr from-gray-700 via-gray-500 to-gray-400 shadow hover:from-gray-900 hover:to-gray-600 transition-all duration-200"
+>
+  End Game
+</button>
           </div>
         </div>
       )}

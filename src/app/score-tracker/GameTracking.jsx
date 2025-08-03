@@ -328,14 +328,7 @@ export default function GameTracking() {
             </div>
             <button
   onClick={startNewGame}
-              style={{
-                padding: "8px 8px",
-                backgroundColor: "#6a89a7",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
+  className="min-h-[40px] px-4 py-2 text-base rounded border-none bg-[#6a89a7] text-white font-semibold align-middle"
 >
   Start Game
 </button>
@@ -393,8 +386,8 @@ export default function GameTracking() {
                         fontSize: "14px",
                         backgroundColor: game.end_time ?(
                           game.our_score > game.opponent_score
-                            ? "#28a745"
-                            : "#dc3545") : "#6c757d",
+                            ? "#2e6f40"
+                            : "#ffa896") : "#f2cf7e",
                         color: "white",
                       }}
                     >

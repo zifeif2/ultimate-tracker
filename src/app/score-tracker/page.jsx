@@ -32,7 +32,7 @@ function MainComponent() {
             onClick={() => setCurrentView("roster")}
             style={{
               padding: "10px 20px",
-              backgroundColor: currentView === "roster" ? "#007bff" : "#f8f9fa",
+              backgroundColor: currentView === "roster" ? "#6a89a7" : "#f8f9fa",
               color: currentView === "roster" ? "white" : "#333",
               border: "1px solid #ddd",
               borderRadius: "5px",
@@ -45,7 +45,7 @@ function MainComponent() {
             onClick={() => setCurrentView("game")}
             style={{
               padding: "10px 20px",
-              backgroundColor: currentView === "game" ? "#007bff" : "#f8f9fa",
+              backgroundColor: currentView === "game" ? "#6a89a7" : "#f8f9fa",
               color: currentView === "game" ? "white" : "#333",
               border: "1px solid #ddd",
               borderRadius: "5px",
@@ -58,7 +58,7 @@ function MainComponent() {
             onClick={() => setCurrentView("stats")}
             style={{
               padding: "10px 20px",
-              backgroundColor: currentView === "stats" ? "#007bff" : "#f8f9fa",
+              backgroundColor: currentView === "stats" ? "#6a89a7" : "#f8f9fa",
               color: currentView === "stats" ? "white" : "#333",
               border: "1px solid #ddd",
               borderRadius: "5px",

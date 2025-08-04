@@ -1,7 +1,11 @@
 import React from "react";
 import { storePlayer, loadInitialData, createGame, updatePlayerStat, storeGame } from "@/api/supabase";
+import GameDetail from "./GameDetail";
 
 export default function GameTracking() {
+  // ...existing state...
+  const [detailGame, setDetailGame] = React.useState(null);
+
   const [selectedGroups, setSelectedGroups] = React.useState(new Set());
   const [editingPointIndex, setEditingPointIndex] = React.useState(null);
 
@@ -358,6 +362,7 @@ export default function GameTracking() {
               </div>
             </div>
               <button
+                disabled={!opponentTeam || !selectedTournament}
                 onClick={startNewGame}
                 className="min-h-[40px] px-4 py-2 text-base rounded border-none bg-[#6a89a7] text-white font-semibold align-middle"
               >
@@ -365,7 +370,7 @@ export default function GameTracking() {
               </button>
           </div>
           {/* Existing Games (Resume) */}
-          {games && games.filter(g => !g.end_time).length > 0 && (
+          {games && games.filter(g => !g.end_time).length > 0 && !detailGame && (
             <div style={{ marginTop: '30px', background: '#fff3cd', borderRadius: '8px', padding: '20px', border: '1px solid #ffeeba' }}>
               <h3 style={{ marginBottom: '15px', color: '#856404' }}>Resume Existing Game</h3>
               {games.filter(g => !g.end_time).map(game => (
@@ -373,26 +378,41 @@ export default function GameTracking() {
                   <div>
                     <strong>vs {game.opponent}</strong> <span style={{ fontSize: '12px', color: '#888' }}>Started: {game.start_time ? (new Date(game.start_time)).toLocaleString() : ''}</span>
                   </div>
-                  <button
-                    className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-blue-500 via-purple-400 to-slate-600 hover:from-blue-600 hover:to-purple-500 transition-all duration-200"
-                    onClick={() => {
-                      setCurrentGame({
-                        ...game,
-                        points: Array.isArray(game.points) ? game.points : [],
-                      });
-                      setOurScore(game.our_score ?? 0);
-                      setOpponentScore(game.opponent_score ?? 0);
-                      setAbbaStyle(game.abba_style);
-                    }}
-                  >
-                    Resume
-                  </button>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-blue-500 via-purple-400 to-slate-600 hover:from-blue-600 hover:to-purple-500 transition-all duration-200"
+                      onClick={() => {
+                        setCurrentGame({
+                          ...game,
+                          points: Array.isArray(game.points) ? game.points : [],
+                        });
+                      }}
+                    >
+                      Resume
+                    </button>
+                    <button
+                      className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-green-500 via-green-400 to-green-700 hover:from-green-600 hover:to-green-500 transition-all duration-200"
+                      onClick={() => setDetailGame(game)}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+
+          {/* Game Detail Modal */}
+          {detailGame && (
+            <GameDetail
+              game={detailGame}
+              players={players}
+              onClose={() => setDetailGame(null)}
+            />
+          )}
+
           {/* Game History */}
-          {games.length > 0 && (
+          {!detailGame && games.length > 0 && (
             <div
               className="p-6 rounded-xl bg-slate-100"
             >
@@ -401,6 +421,7 @@ export default function GameTracking() {
                 <div
                   key={game.id}
                   className="p-4 mb-3 rounded-lg bg-slate-50 border border-slate-200"
+                  onClick={() => setDetailGame(game)}
                 >
                   <div
                     style={{

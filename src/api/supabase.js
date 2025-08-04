@@ -6,26 +6,26 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Delete player by id (and remove from player_group)
 export const deletePlayer = async (playerId) => {
-  // Remove associations first
-  await supabase.from('player_group').delete().eq('player', playerId);
-  // Remove player
-  const { error } = await supabase.from('players').delete().eq('id', playerId);
-  if (error) {
-    console.error('Failed to delete player:', error);
-    throw error;
-  }
+    // Remove associations first
+    await supabase.from('player_group').delete().eq('player', playerId);
+    // Remove player
+    const { error } = await supabase.from('players').delete().eq('id', playerId);
+    if (error) {
+        console.error('Failed to delete player:', error);
+        throw error;
+    }
 };
 
 // Delete group by id (and remove from player_group)
 export const deleteGroup = async (groupId) => {
-  // Remove player-group associations for this group
-  await supabase.from('player_group').delete().eq('group', groupId);
-  // Remove group
-  const { error } = await supabase.from('groups').delete().eq('id', groupId);
-  if (error) {
-    console.error('Failed to delete group:', error);
-    throw error;
-  }
+    // Remove player-group associations for this group
+    await supabase.from('player_group').delete().eq('group', groupId);
+    // Remove group
+    const { error } = await supabase.from('groups').delete().eq('id', groupId);
+    if (error) {
+        console.error('Failed to delete group:', error);
+        throw error;
+    }
 };
 
 
@@ -40,14 +40,14 @@ export const storePlayer = async (player) => {
         stats: player.stats,
         stats_per_game: player.perGame
     }
-    const {data, error} = await supabase.from('players').upsert(body).select();
+    const { data, error } = await supabase.from('players').upsert(body).select();
     if (error) {
         console.error(error)
         return;
     }
-    const newPlayer=  data[0];
+    const newPlayer = data[0];
     const playerGroups = player.groups.map(group => {
-        return {player: newPlayer.id, group: group}
+        return { player: newPlayer.id, group: group }
     })
     await supabase.from('player_group').insert(playerGroups);
     newPlayer.groups = player.groups
@@ -59,7 +59,7 @@ export const updatePlayerGroups = async (playerId, groups) => {
     await supabase.from('player_group').delete().eq('player', playerId);
     // Create new associations
     const playerGroups = groups.map(group => {
-        return {player: playerId, group: group}
+        return { player: playerId, group: group }
     })
     await supabase.from('player_group').insert(playerGroups);
 }
@@ -67,15 +67,15 @@ export const updatePlayerGroups = async (playerId, groups) => {
 
 export const storeGroups = async (groupName) => {
     // name; 
-    const {data, error} =  await supabase.from('groups').insert({name:groupName}).select();
+    const { data, error } = await supabase.from('groups').insert({ name: groupName }).select();
     if (error) {
         console.error(error)
     }
-    return data[0] 
+    return data[0]
 }
 
-export const createGame = async(opponentTeam, tournamentName = "", abbaStyle = "DOM") => {
-    const {data, error} = await supabase.from('games').insert({
+export const createGame = async (opponentTeam, tournamentName = "", abbaStyle = "DOM") => {
+    const { data, error } = await supabase.from('games').insert({
         opponent: opponentTeam,
         tournament: tournamentName,
         points: [],
@@ -94,7 +94,7 @@ export const createGame = async(opponentTeam, tournamentName = "", abbaStyle = "
 }
 
 export const storeGame = async (gameId, our_score, opponent_score, points, end_time, tournamentName = "") => {
-    const {data, error} = await supabase.from('games').upsert({
+    const { data, error } = await supabase.from('games').upsert({
         id: gameId,
         our_score: our_score,
         opponent_score: opponent_score,
@@ -119,24 +119,24 @@ export const unassignPlayerFromGroup = async (playerId, groupId) => {
 
 export const loadInitialData = async () => {
     try {
-      const { data: playersData } = await supabase.from('players').select();
-      const { data: groupsData } = await supabase.from('groups').select();
-      const { data: gamesData } = await supabase.from('games').select();
-      const {data: playerGroupsData} = await supabase.from('player_group').select();
-      playersData.forEach(player => {
-        player.groups = [];
-      })
-      playerGroupsData.forEach(playerGroup => {
-    const player = playersData.find(player => player.id === playerGroup.player);
-    if (player) {
-        player.groups.push(playerGroup.group);
-    }
-}   )    
-console.log(playersData)
+        const { data: playersData } = await supabase.from('players').select();
+        const { data: groupsData } = await supabase.from('groups').select();
+        const { data: gamesData } = await supabase.from('games').select();
+        const { data: playerGroupsData } = await supabase.from('player_group').select();
+        playersData.forEach(player => {
+            player.groups = [];
+        })
+        playerGroupsData.forEach(playerGroup => {
+            const player = playersData.find(player => player.id === playerGroup.player);
+            if (player) {
+                player.groups.push(playerGroup.group);
+            }
+        })
+        console.log(playersData)
 
 
-    return {playersData, groupsData, gamesData}
+        return { playersData, groupsData, gamesData }
     } catch (err) {
-      console.error("Error loading initial data from Supabase", err);
+        console.error("Error loading initial data from Supabase", err);
     }
-  };
+};

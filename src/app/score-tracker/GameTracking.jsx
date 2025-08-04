@@ -930,7 +930,7 @@ export default function GameTracking() {
                   fontWeight: "bold",
                 }}
               >
-                Offensive Strategy Notes
+                Strategy Notes
               </label>
               <textarea
                 value={currentPoint.strategy}

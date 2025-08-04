@@ -27,6 +27,7 @@ export default function GameTracking() {
   const [games, _setGames] = React.useState([]);
   const [players, _setPlayers] = React.useState([]);
   const [groups, _setGroups] = React.useState([]);
+  const [abbaStyle, setAbbaStyle] = React.useState([]);
   const playerIdToGroup = React.useMemo(() => {
     return players.reduce((acc, player) => {
       acc[player.id] = player.groups;
@@ -63,7 +64,7 @@ export default function GameTracking() {
       setSelectedTournament(tournamentToUse);
     }
     if (opponentTeam.trim() && tournamentToUse) {
-      const newGame = await createGame(opponentTeam.trim(), tournamentToUse);
+      const newGame = await createGame(opponentTeam.trim(), tournamentToUse, abbaStyle);
       setCurrentGame(newGame);
       setOurScore(0);
       setOpponentScore(0);
@@ -87,7 +88,7 @@ export default function GameTracking() {
     fetchTournaments();
   }, []);
 
-    // Select players for point
+  // Select players for point
   const togglePlayerSelection = (playerId) => {
     setSelectedPlayers((prev) =>
       prev.includes(playerId)
@@ -205,13 +206,26 @@ export default function GameTracking() {
     setInitialData();
   }, []);
 
-    const setPlayers = async (value) => {
-      const newPlayer = await storePlayer(value);
-  
-      const updatedPlayers = players.map(player => player.id === newPlayer.id ? newPlayer : player);
-      updatedPlayers.sort((a, b) => a.name.localeCompare(b.name));
-      _setPlayers(updatedPlayers);
-    };
+  const setPlayers = async (value) => {
+    const newPlayer = await storePlayer(value);
+
+    const updatedPlayers = players.map(player => player.id === newPlayer.id ? newPlayer : player);
+    updatedPlayers.sort((a, b) => a.name.localeCompare(b.name));
+    _setPlayers(updatedPlayers);
+  };
+
+  const calculateCurrentAbbaStyle = (style) => {
+    const totalPoints = ourScore + opponentScore;
+    let needSwitch = false;
+    if ((totalPoints)%4 == 1 || (totalPoints)%4 == 2) {
+      needSwitch = true;
+    }
+    if (needSwitch) {
+     return style === "DOM" ? "DOW" : "DOM"; 
+    }
+    return style;
+  }
+
   // Add mistake to current point
   const addMistake = () => {
     if (newMistake.player && newMistake.type.trim()) {
@@ -327,12 +341,28 @@ export default function GameTracking() {
                 style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
               />
             </div>
-            <button
-  onClick={startNewGame}
-  className="min-h-[40px] px-4 py-2 text-base rounded border-none bg-[#6a89a7] text-white font-semibold align-middle"
->
-  Start Game
-</button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: '5px'}}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                ABBA style
+              </label>
+              <div style={{ marginBottom: "15px" }}>
+                <select
+                  value={abbaStyle}
+                  onChange={e => setAbbaStyle(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">Select ABBA type...</option>
+                  <option value="DOM">DOM</option>
+                  <option value="DOW">DOW</option>
+                </select>
+              </div>
+            </div>
+              <button
+                onClick={startNewGame}
+                className="min-h-[40px] px-4 py-2 text-base rounded border-none bg-[#6a89a7] text-white font-semibold align-middle"
+              >
+                Start Game
+              </button>
           </div>
           {/* Existing Games (Resume) */}
           {games && games.filter(g => !g.end_time).length > 0 && (
@@ -352,6 +382,7 @@ export default function GameTracking() {
                       });
                       setOurScore(game.our_score ?? 0);
                       setOpponentScore(game.opponent_score ?? 0);
+                      setAbbaStyle(game.abba_style);
                     }}
                   >
                     Resume
@@ -385,7 +416,7 @@ export default function GameTracking() {
                         padding: "5px 10px",
                         borderRadius: "15px",
                         fontSize: "14px",
-                        backgroundColor: game.end_time ?(
+                        backgroundColor: game.end_time ? (
                           game.our_score > game.opponent_score
                             ? "#2e6f40"
                             : "#ffa896") : "#f2cf7e",
@@ -476,6 +507,9 @@ export default function GameTracking() {
               Select Players for This Point
             </h3>
 
+            <div>
+              <label> {abbaStyle ? calculateCurrentAbbaStyle(abbaStyle) : ""}</label>
+            </div>
             {/* Quick Group Selection */}
             <div style={{ marginBottom: "15px" }}>
               <strong>Quick Select by Group:</strong>
@@ -870,16 +904,16 @@ export default function GameTracking() {
                           {player?.name}: {play.type}
                         </span>
                         <button
-  onClick={() => removePlay(play.id)}
-  className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 via-orange-400 to-yellow-400 hover:from-red-500 hover:to-yellow-500 text-white shadow-md transition-all duration-200"
-  aria-label="Remove play"
->
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth="2">
-    <circle cx="10" cy="10" r="9" stroke="currentColor" fill="none" />
-    <line x1="7" y1="7" x2="13" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <line x1="13" y1="7" x2="7" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-</button>
+                          onClick={() => removePlay(play.id)}
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 via-orange-400 to-yellow-400 hover:from-red-500 hover:to-yellow-500 text-white shadow-md transition-all duration-200"
+                          aria-label="Remove play"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth="2">
+                            <circle cx="10" cy="10" r="9" stroke="currentColor" fill="none" />
+                            <line x1="7" y1="7" x2="13" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            <line x1="13" y1="7" x2="7" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                        </button>
                       </div>
                     );
                   })}
@@ -929,27 +963,27 @@ export default function GameTracking() {
             }}
           >
             <button
-  onClick={() => recordPoint("us")}
-  className="px-8 py-4 rounded-2xl font-bold text-lg text-white shadow-lg bg-gradient-to-tr from-pink-500 via-orange-400 to-yellow-400 hover:from-red-500 hover:to-yellow-500 transition-all duration-200"
->
-  We Scored!
-</button>
+              onClick={() => recordPoint("us")}
+              className="px-8 py-4 rounded-2xl font-bold text-lg text-white shadow-lg bg-gradient-to-tr from-pink-500 via-orange-400 to-yellow-400 hover:from-red-500 hover:to-yellow-500 transition-all duration-200"
+            >
+              We Scored!
+            </button>
             <button
-  onClick={() => recordPoint("opponent")}
-  className="px-8 py-4 rounded-2xl font-bold text-lg text-white shadow-lg bg-gradient-to-tr from-purple-500 via-indigo-400 to-blue-400 hover:from-pink-500 hover:to-purple-500 transition-all duration-200"
->
-  They Scored
-</button>
+              onClick={() => recordPoint("opponent")}
+              className="px-8 py-4 rounded-2xl font-bold text-lg text-white shadow-lg bg-gradient-to-tr from-purple-500 via-indigo-400 to-blue-400 hover:from-pink-500 hover:to-purple-500 transition-all duration-200"
+            >
+              They Scored
+            </button>
           </div>
 
           {/* End Game */}
           <div style={{ textAlign: "center" }}>
             <button
-  onClick={endGame}
-  className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-tr from-gray-700 via-gray-500 to-gray-400 shadow hover:from-gray-900 hover:to-gray-600 transition-all duration-200"
->
-  End Game
-</button>
+              onClick={endGame}
+              className="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-tr from-gray-700 via-gray-500 to-gray-400 shadow hover:from-gray-900 hover:to-gray-600 transition-all duration-200"
+            >
+              End Game
+            </button>
           </div>
         </div>
       )}

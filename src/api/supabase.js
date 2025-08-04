@@ -74,7 +74,7 @@ export const storeGroups = async (groupName) => {
     return data[0] 
 }
 
-export const createGame = async(opponentTeam, tournamentName = "") => {
+export const createGame = async(opponentTeam, tournamentName = "", abbaStyle = "DOM") => {
     const {data, error} = await supabase.from('games').insert({
         opponent: opponentTeam,
         tournament: tournamentName,
@@ -83,7 +83,8 @@ export const createGame = async(opponentTeam, tournamentName = "") => {
         our_score: 0,
         opponent_score: 0,
         start_time: new Date(),
-        end_time: null
+        end_time: null,
+        abba_style: abbaStyle
     }).select();
     if (error) {
         console.error(error);

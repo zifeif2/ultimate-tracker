@@ -20,6 +20,10 @@ export default function RosterManagement() {
       }
     };
   
+    const onUpdatePlayerGroups = (playerId, newGroups) => {
+      _setPlayers((prev) => prev.map(p => p.id === playerId ? { ...p, groups: newGroups } : p));
+    };
+
     // ...
     // Remove player
     const removePlayer = async (playerId) => {

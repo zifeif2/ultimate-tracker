@@ -182,7 +182,7 @@ export default function GameTracking() {
   const endGame = () => {
     const finishedGame = {
       ...currentGame,
-      endTime: new Date(),
+      end_time: new Date(),
       ourScore,
       opponentScore,
     };
@@ -200,7 +200,7 @@ export default function GameTracking() {
       const { gamesData, groupsData, playersData } = await loadInitialData();
       _setGames(gamesData || []);
       _setGroups(groupsData || []);
-      _setPlayers(playersData || []);
+      _setPlayers(playersData.sort((a, b) => a.name.localeCompare(b.name)) || []);
     }
     setInitialData();
   }, []);
@@ -209,6 +209,7 @@ export default function GameTracking() {
       const newPlayer = await storePlayer(value);
   
       const updatedPlayers = players.map(player => player.id === newPlayer.id ? newPlayer : player);
+      updatedPlayers.sort((a, b) => a.name.localeCompare(b.name));
       _setPlayers(updatedPlayers);
     };
   // Add mistake to current point
@@ -343,7 +344,7 @@ export default function GameTracking() {
                     <strong>vs {game.opponent}</strong> <span style={{ fontSize: '12px', color: '#888' }}>Started: {game.start_time ? (new Date(game.start_time)).toLocaleString() : ''}</span>
                   </div>
                   <button
-                    className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-blue-200 via-purple-100 to-slate-100 hover:from-blue-300 hover:to-purple-200 transition-all duration-200"
+                    className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-blue-500 via-purple-400 to-slate-600 hover:from-blue-600 hover:to-purple-500 transition-all duration-200"
                     onClick={() => {
                       setCurrentGame({
                         ...game,

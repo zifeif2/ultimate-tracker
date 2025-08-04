@@ -391,7 +391,7 @@ export default function GameTracking() {
                       Resume
                     </button>
                     <button
-                      className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-green-500 via-green-400 to-green-700 hover:from-green-600 hover:to-green-500 transition-all duration-200"
+                      className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-yellow-500 via-orange-400 to-orange-700 hover:from-orange-600 hover:to-orange-500 transition-all duration-200"
                       onClick={() => setDetailGame(game)}
                     >
                       View Details
@@ -961,7 +961,7 @@ export default function GameTracking() {
                     strategy: e.target.value,
                   }))
                 }
-                placeholder="What strategy did the team use? (e.g., vertical stack, horizontal stack, zone offense)"
+                placeholder="What strategy did we use (which stack, force, pool play)? What about other team?"
                 style={{
                   width: "100%",
                   padding: "8px",

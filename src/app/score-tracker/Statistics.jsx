@@ -1,7 +1,19 @@
 import React from "react";
 import { loadInitialData } from "@/api/supabase";
+import ReactMarkdown from 'react-markdown';
+
+// Remove fs and readFile. Use useEffect to fetch the static file from /chatgpt/NOTE_SYSTEM_MESSAGE.txt
 
 export default function Statistics() {
+  const [noteSystemMessage, setNoteSystemMessage] = React.useState("");
+
+  React.useEffect(() => {
+    fetch("/chatgpt/NOTE_SYSTEM_MESSAGE.txt")
+      .then(res => res.text())
+      .then(setNoteSystemMessage)
+      .catch(() => setNoteSystemMessage(""));
+  }, []);
+
   const [players, _setPlayers] = React.useState([]);
   const [games, _setGames] = React.useState([]);
   const [selectedTournament, setSelectedTournament] = React.useState('');
@@ -15,7 +27,6 @@ export default function Statistics() {
   // Get all games in the selected tournament
   const gamesInTournament = React.useMemo(() => {
     if (!selectedTournament) return [];
-    console.log(games);
     return games.filter(g => g.tournament === selectedTournament);
   }, [games, selectedTournament]);
 
@@ -41,6 +52,58 @@ export default function Statistics() {
       }
     }
     return agg;
+  }
+
+  const [summaryNote, setSummaryNote] = React.useState("");
+  const [loadingSummary, setLoadingSummary] = React.useState(false);
+
+  async function handleSummarizeNote() {
+    setLoadingSummary(true);
+    setSummaryNote("");
+    let notes = [];
+    try {
+      if (selectedGame) {
+        // Here we use '==' instead of '===' because the id is a number but selectedGame is a string
+        let points = gamesInTournament.find(g => g.id == selectedGame)?.points || [];
+        for (const point of points) {
+          const note_per_point = {winner: point.winner, strategy: point.strategy, good: point.plays, bad: point.mistakes};
+          notes.push(note_per_point);
+        }
+      } else if (selectedTournament) {
+        for (const game of gamesInTournament) {
+          for (const point of game.points) {
+            const note_per_point = {winner: point.winner, strategy: point.strategy, good: point.plays, bad: point.mistakes};
+            notes.push(note_per_point);
+          }
+        }
+      } else {
+        setSummaryNote("Please select a game or tournament to summarize notes.");
+        setLoadingSummary(false);
+        return;
+      }
+      if (notes.length === 0) {
+        setSummaryNote("No notes to summarize.");
+        setLoadingSummary(false);
+        return;
+      }
+      const response = await fetch('http://localhost:8000/summarizeNotes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notes }),
+        mode: 'cors', // <--- add this to avoid OPTIONS request
+      });
+      const j = await response.json()
+      const msg = j["summary"]
+      
+      setSummaryNote(msg);
+    } catch (err) {
+      console.log(err);
+      setSummaryNote("Error generating summary note.");
+    } finally {
+      setLoadingSummary(false);
+    }
   }
 
   React.useEffect( () => {
@@ -111,6 +174,33 @@ export default function Statistics() {
           ))}
         </select>
       </div>
+      {/* Summarize Note Button and Display */}
+      {selectedTournament && <div style={{ marginBottom: 24 }}>
+        <button
+          onClick={handleSummarizeNote}
+          disabled={loadingSummary}
+          style={{
+            padding: '8px 18px',
+            fontWeight: 600,
+            background: loadingSummary ? '#6c757d' : '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: loadingSummary ? 'not-allowed' : 'pointer',
+            marginRight: 16
+          }}
+        >
+          {loadingSummary ? 'Summarizing...' : 'Summarize Note'}
+        </button>
+      {summaryNote && (
+        <details style={{ marginTop: 12 }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Summary Note</summary>
+          <div style={{ padding: '12px', background: '#f1f1f1', borderRadius: 6, maxWidth: 800 }}>
+            <ReactMarkdown>{summaryNote}</ReactMarkdown>
+          </div>
+        </details>
+      )} 
+      </div>}
 
     {/* Top Performers */}
     <div

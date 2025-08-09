@@ -382,6 +382,7 @@ export default function GameTracking() {
                     <button
                       className="px-4 py-2 rounded-lg text-slate-50 font-semibold shadow bg-gradient-to-tr from-blue-500 via-purple-400 to-slate-600 hover:from-blue-600 hover:to-purple-500 transition-all duration-200"
                       onClick={() => {
+                        setAbbaStyle(game.abba_style);
                         setCurrentGame({
                           ...game,
                           points: Array.isArray(game.points) ? game.points : [],
@@ -529,7 +530,7 @@ export default function GameTracking() {
             </h3>
 
             <div>
-              <label> {abbaStyle ? calculateCurrentAbbaStyle(abbaStyle) : ""}</label>
+              <label> {abbaStyle ? calculateCurrentAbbaStyle(abbaStyle) : "abbaStyle not initiated"}</label>
             </div>
             {/* Quick Group Selection */}
             <div style={{ marginBottom: "15px" }}>

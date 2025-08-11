@@ -18,6 +18,7 @@ export default function Statistics() {
   const [games, _setGames] = React.useState([]);
   const [selectedTournament, setSelectedTournament] = React.useState('');
   const [selectedGame, setSelectedGame] = React.useState('');
+  const playerPerGameStats = [];
 
   // Get all unique tournaments from games
   const tournaments = React.useMemo(() => {
@@ -40,16 +41,38 @@ export default function Statistics() {
   // Helper to aggregate stats for a player over selected tournament only
   function getTournamentStats(player) {
     // If no tournament selected, fallback to total
+    // If no tournament selected, fallback to total
     if (!selectedTournament) return player.stats.total;
-    const perGame = player.stats.perGame || {};
     const agg = { goals: 0, assists: 0, plays: 0, mistakes: 0 };
-    for (const gid of gameIdsForStats) {
-      if (perGame[gid]) {
-        agg.goals += perGame[gid].goals || 0;
-        agg.assists += perGame[gid].assists || 0;
-        agg.plays += perGame[gid].plays || 0;
-        agg.mistakes += perGame[gid].mistakes || 0;
+
+    // Gather all points from the relevant games
+    let relevantGames = [];
+    if (selectedGame) {
+      relevantGames = games.filter(g => String(g.id) === selectedGame);
+    } else {
+      relevantGames = games.filter(g => g.tournament === selectedTournament);
+    }
+
+    for (const game of relevantGames) {
+     const tmp_agg = playerPerGameStats[game.id]?.[player.id] || { goals: 0, assists: 0, plays: 0, mistakes: 0 };
+     if (!playerPerGameStats[game.id] || !playerPerGameStats[game.id][player.id]) {
+        game.points.forEach(pt => {
+          if (pt.scorer && String(pt.scorer) === String(player.id)) tmp_agg.goals += 1;
+          if (pt.assister && String(pt.assister) === String(player.id)) tmp_agg.assists += 1;
+          if (Array.isArray(pt.mistakes)) {
+            tmp_agg.mistakes += pt.mistakes.filter(m => String(m.player) === String(player.id)).length;
+          }
+          if (Array.isArray(pt.plays)) {
+            tmp_agg.plays += pt.plays.filter(p => String(p.player) === String(player.id)).length;
+          }
+        });
       }
+      playerPerGameStats[game.id] = playerPerGameStats[game.id] || {};
+      playerPerGameStats[game.id][player.id] = tmp_agg;
+      agg.goals += tmp_agg.goals;
+      agg.assists += tmp_agg.assists;
+      agg.plays += tmp_agg.plays;
+      agg.mistakes += tmp_agg.mistakes;
     }
     return agg;
   }
@@ -66,13 +89,13 @@ export default function Statistics() {
         // Here we use '==' instead of '===' because the id is a number but selectedGame is a string
         let points = gamesInTournament.find(g => g.id == selectedGame)?.points || [];
         for (const point of points) {
-          const note_per_point = {winner: point.winner, strategy: point.strategy, good: point.plays, bad: point.mistakes};
+          const note_per_point = { winner: point.winner, strategy: point.strategy, good: point.plays, bad: point.mistakes };
           notes.push(note_per_point);
         }
       } else if (selectedTournament) {
         for (const game of gamesInTournament) {
           for (const point of game.points) {
-            const note_per_point = {winner: point.winner, strategy: point.strategy, good: point.plays, bad: point.mistakes};
+            const note_per_point = { winner: point.winner, strategy: point.strategy, good: point.plays, bad: point.mistakes };
             notes.push(note_per_point);
           }
         }
@@ -96,7 +119,7 @@ export default function Statistics() {
       });
       const j = await response.json()
       const msg = j["summary"]
-      
+
       setSummaryNote(msg);
     } catch (err) {
       console.log(err);
@@ -106,12 +129,11 @@ export default function Statistics() {
     }
   }
 
-  React.useEffect( () => {
-  
+  React.useEffect(() => {
     const setInitialData = async () => {
-    const {playersData, gamesData} = await loadInitialData();
-    _setPlayers(playersData || []);
-    _setGames(gamesData || []);
+      const { playersData, gamesData } = await loadInitialData();
+      _setPlayers(playersData || []);
+      _setGames(gamesData || []);
     }
     setInitialData();
   }, []);
@@ -192,265 +214,265 @@ export default function Statistics() {
         >
           {loadingSummary ? 'Summarizing...' : 'Summarize Note'}
         </button>
-      {summaryNote && (
-        <details style={{ marginTop: 12 }}>
-          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Summary Note</summary>
-          <div style={{ padding: '12px', background: '#f1f1f1', borderRadius: 6, maxWidth: 800 }}>
-            <ReactMarkdown>{summaryNote}</ReactMarkdown>
-          </div>
-        </details>
-      )} 
+        {summaryNote && (
+          <details style={{ marginTop: 12 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Summary Note</summary>
+            <div style={{ padding: '12px', background: '#f1f1f1', borderRadius: 6, maxWidth: 800 }}>
+              <ReactMarkdown>{summaryNote}</ReactMarkdown>
+            </div>
+          </details>
+        )}
       </div>}
 
-    {/* Top Performers */}
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-        gap: "20px",
-        marginBottom: "30px",
-      }}
-    >
-      {/* Top Scorers */}
+      {/* Top Performers */}
       <div
         style={{
-          padding: "20px",
-          backgroundColor: "#f8f9fa",
-          borderRadius: "8px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap: "20px",
+          marginBottom: "30px",
         }}
       >
-        <h3 style={{ marginBottom: "15px", color: "#28a745" }}>
-          Top Scorers
-        </h3>
-        {getTopScorers().map((player, index) => (
-          <div
-            key={player.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "8px 0",
-              borderBottom: "1px solid #ddd",
-            }}
-          >
-            <span>
-              {index + 1}. {player.name}
-            </span>
-            <span style={{ fontWeight: "bold", color: "#28a745" }}>
-              {player._tStats.goals} goals
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Top Assisters */}
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "#f8f9fa",
-          borderRadius: "8px",
-        }}
-      >
-        <h3 style={{ marginBottom: "15px", color: "#007bff" }}>
-          Top Assisters
-        </h3>
-        {getTopAssisters().map((player, index) => (
-          <div
-            key={player.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "8px 0",
-              borderBottom: "1px solid #ddd",
-            }}
-          >
-            <span>
-            {index + 1}. {player.name}
-            </span>
-            <span style={{ fontWeight: "bold", color: "#007bff" }}>
-              {player._tStats.assists} assists
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Top Play Makers */}
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "#f8f9fa",
-          borderRadius: "8px",
-        }}
-      >
-        <h3 style={{ marginBottom: "15px", color: "#ffc107" }}>
-          Top Play Makers
-        </h3>
-        {getTopPlayMakers().map((player, index) => (
-          <div
-            key={player.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "8px 0",
-              borderBottom: "1px solid #ddd",
-            }}
-          >
-            <span>
-              {index + 1}. {player.name}  
-            </span>
-            <span style={{ fontWeight: "bold", color: "#ffc107" }}>
-              {player._tStats.plays} plays
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* All Player Stats */}
-    <div
-      style={{
-        padding: "20px",
-        backgroundColor: "#f8f9fa",
-        borderRadius: "8px",
-        marginBottom: "20px",
-      }}
-    >
-      <h3 style={{ marginBottom: "15px" }}>All Player Statistics</h3>
-      <div style={{ overflowX: "auto" }}>
-        <table
+        {/* Top Scorers */}
+        <div
           style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            backgroundColor: "white",
+            padding: "20px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
           }}
         >
-          <thead>
-            <tr style={{ backgroundColor: "#007bff", color: "white" }}>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  border: "1px solid #ddd",
-                }}
-              >
-                Player
-              </th>
+          <h3 style={{ marginBottom: "15px", color: "#28a745" }}>
+            Top Scorers
+          </h3>
+          {getTopScorers().map((player, index) => (
+            <div
+              key={player.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "8px 0",
+                borderBottom: "1px solid #ddd",
+              }}
+            >
+              <span>
+                {index + 1}. {player.name}
+              </span>
+              <span style={{ fontWeight: "bold", color: "#28a745" }}>
+                {player._tStats.goals} goals
+              </span>
+            </div>
+          ))}
+        </div>
 
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "center",
-                  border: "1px solid #ddd",
-                }}
-              >
-                Goals
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "center",
-                  border: "1px solid #ddd",
-                }}
-              >
-                Assists
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "center",
-                  border: "1px solid #ddd",
-                }}
-              >
-                Good Plays
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "center",
-                  border: "1px solid #ddd",
-                }}
-              >
-                Mistakes
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "center",
-                  border: "1px solid #ddd",
-                }}
-              >
-                Total Points
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {players.map((player) => {
-              const tStats = getTournamentStats(player);
-              return (
-                <tr key={player.id}>
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #ddd",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player.name}
-                  </td>
+        {/* Top Assisters */}
+        <div
+          style={{
+            padding: "20px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+          }}
+        >
+          <h3 style={{ marginBottom: "15px", color: "#007bff" }}>
+            Top Assisters
+          </h3>
+          {getTopAssisters().map((player, index) => (
+            <div
+              key={player.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "8px 0",
+                borderBottom: "1px solid #ddd",
+              }}
+            >
+              <span>
+                {index + 1}. {player.name}
+              </span>
+              <span style={{ fontWeight: "bold", color: "#007bff" }}>
+                {player._tStats.assists} assists
+              </span>
+            </div>
+          ))}
+        </div>
 
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {tStats.goals}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {tStats.assists}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {tStats.plays}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {tStats.mistakes}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {tStats.goals + tStats.assists}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {/* Top Play Makers */}
+        <div
+          style={{
+            padding: "20px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+          }}
+        >
+          <h3 style={{ marginBottom: "15px", color: "#ffc107" }}>
+            Top Play Makers
+          </h3>
+          {getTopPlayMakers().map((player, index) => (
+            <div
+              key={player.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "8px 0",
+                borderBottom: "1px solid #ddd",
+              }}
+            >
+              <span>
+                {index + 1}. {player.name}
+              </span>
+              <span style={{ fontWeight: "bold", color: "#ffc107" }}>
+                {player._tStats.plays} plays
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* All Player Stats */}
+      <div
+        style={{
+          padding: "20px",
+          backgroundColor: "#f8f9fa",
+          borderRadius: "8px",
+          marginBottom: "20px",
+        }}
+      >
+        <h3 style={{ marginBottom: "15px" }}>All Player Statistics</h3>
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              backgroundColor: "white",
+            }}
+          >
+            <thead>
+              <tr style={{ backgroundColor: "#007bff", color: "white" }}>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Player
+                </th>
+
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "center",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Goals
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "center",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Assists
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "center",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Good Plays
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "center",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Mistakes
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "center",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Total Points
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((player) => {
+                const tStats = getTournamentStats(player);
+                return (
+                  <tr key={player.id}>
+                    <td
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player.name}
+                    </td>
+
+                    <td
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        textAlign: "center",
+                      }}
+                    >
+                      {tStats.goals}
+                    </td>
+                    <td
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        textAlign: "center",
+                      }}
+                    >
+                      {tStats.assists}
+                    </td>
+                    <td
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        textAlign: "center",
+                      }}
+                    >
+                      {tStats.plays}
+                    </td>
+                    <td
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        textAlign: "center",
+                      }}
+                    >
+                      {tStats.mistakes}
+                    </td>
+                    <td
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #ddd",
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {tStats.goals + tStats.assists}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
   );
 }
 
